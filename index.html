@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="QuickQuiz - A modern, responsive SaaS quiz platform for testing knowledge and creating custom quizzes.">
+  <title>QuickQuiz — Modern Learning & Quiz Platform</title>
+
+  <!-- Google Fonts: DM Sans & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout" id="appLayout">
+    <!-- Mobile Header -->
+    <header class="mobile-header" aria-label="Mobile Navigation">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <span class="brand-text">Quick<span>Quiz</span></span>
+      </div>
+      <button type="button" class="btn-icon mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation menu" aria-expanded="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar" aria-label="Primary Navigation">
+      <div class="sidebar-header">
+        <a href="#overview" class="brand" id="brandLink">
+          <div class="brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <span class="brand-text">Quick<span>Quiz</span></span>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <ul class="nav-list" role="menubar">
+          <li class="nav-item" role="none">
+            <button type="button" class="nav-link active" data-view="overview" id="navOverview" role="menuitem">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+              <span>Overview</span>
+            </button>
+          </li>
+          <li class="nav-item" role="none">
+            <button type="button" class="nav-link" data-view="create" id="navCreate" role="menuitem">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+              <span>Create a Quiz</span>
+            </button>
+          </li>
+          <li class="nav-item" role="none">
+            <button type="button" class="nav-link" data-view="history" id="navHistory" role="menuitem">
+              <svg class="nav-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <span>My Results</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-badge">
+          <div class="avatar">QQ</div>
+          <div class="user-info">
+            <span class="user-name">QuickQuiz Scholar</span>
+            <span class="user-role">Free Plan</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Backdrop for Mobile -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+      
+      <!-- ========================================== -->
+      <!-- VIEW 1: DASHBOARD / OVERVIEW               -->
+      <!-- ========================================== -->
+      <section class="view active" id="viewOverview" aria-label="Dashboard Overview">
+        <div class="view-header">
+          <div class="welcome-banner">
+            <div class="welcome-content">
+              <span class="welcome-chip">Welcome Back 👋</span>
+              <h1 class="welcome-title">Sharpen your knowledge with QuickQuiz</h1>
+              <p class="welcome-desc">Choose from our curated challenge decks or craft your own personalized quizzes in seconds.</p>
+              <div class="welcome-actions">
+                <button type="button" class="btn btn-primary" id="btnQuickStart">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  <span>Quick Play</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="btnBannerCreate">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>Create Custom Quiz</span>
+                </button>
+              </div>
+            </div>
+            <div class="welcome-illustration" aria-hidden="true">
+              <div class="illustration-graphic">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Statistics -->
+        <div class="stats-grid" aria-label="Quiz Statistics">
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-purple">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Available Quizzes</span>
+              <span class="stat-value" id="statAvailableQuizzes">3</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-green">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Completed Quizzes</span>
+              <span class="stat-value" id="statCompletedQuizzes">0</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-amber">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Average Score</span>
+              <span class="stat-value" id="statAverageScore">--</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Available Quizzes Section -->
+        <div class="section-container">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Available Quizzes</h2>
+              <p class="section-subtitle">Select a quiz to test your mastery across various subjects.</p>
+            </div>
+            <div class="category-filters" role="tablist" aria-label="Quiz Categories">
+              <button type="button" class="filter-chip active" data-category="all" role="tab" aria-selected="true">All</button>
+              <button type="button" class="filter-chip" data-category="Web Development" role="tab" aria-selected="false">Web Dev</button>
+              <button type="button" class="filter-chip" data-category="General Knowledge" role="tab" aria-selected="false">General Knowledge</button>
+              <button type="button" class="filter-chip" data-category="Science" role="tab" aria-selected="false">Science</button>
+              <button type="button" class="filter-chip" data-category="custom" role="tab" aria-selected="false">Custom</button>
+            </div>
+          </div>
+
+          <!-- Quizzes Grid -->
+          <div class="quiz-grid" id="quizGrid" aria-live="polite">
+            <!-- Dynamically populated via JavaScript -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 2: ACTIVE QUIZ VIEW                   -->
+      <!-- ========================================== -->
+      <section class="view" id="viewQuiz" aria-label="Active Quiz">
+        <div class="quiz-header-bar">
+          <button type="button" class="btn btn-ghost btn-sm" id="btnExitQuiz" aria-label="Exit quiz and return to overview">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span>Exit Quiz</span>
+          </button>
+          <div class="quiz-active-info">
+            <span class="quiz-active-badge" id="quizActiveCategory">Category</span>
+            <span class="quiz-active-title" id="quizActiveTitle">Quiz Title</span>
+          </div>
+          <div class="quiz-counter" id="quizQuestionCounter">Question 1 of 5</div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="quiz-progress-wrapper" aria-label="Quiz progress">
+          <div class="quiz-progress-track">
+            <div class="quiz-progress-fill" id="quizProgressFill" style="width: 20%;"></div>
+          </div>
+        </div>
+
+        <!-- Question Card -->
+        <div class="quiz-card-container">
+          <div class="quiz-question-card" id="quizCard">
+            <div class="quiz-card-header">
+              <span class="question-number-pill" id="questionNumberPill">Question 1</span>
+              <span class="question-difficulty-pill" id="questionDifficultyPill">Medium</span>
+            </div>
+
+            <h2 class="question-prompt" id="questionPrompt">What does HTML stand for?</h2>
+
+            <!-- Options Container -->
+            <div class="options-grid" id="optionsContainer" role="radiogroup" aria-labelledby="questionPrompt">
+              <!-- Dynamically populated options -->
+            </div>
+
+            <!-- Instant Feedback / Explanation Box (Hidden until answer checked) -->
+            <div class="feedback-box" id="feedbackBox" style="display: none;" aria-live="assertive">
+              <div class="feedback-header">
+                <div class="feedback-badge" id="feedbackBadge">
+                  <span class="feedback-icon" id="feedbackIcon"></span>
+                  <span class="feedback-text" id="feedbackText">Correct!</span>
+                </div>
+              </div>
+              <p class="feedback-explanation" id="feedbackExplanation">
+                Explanation text goes here...
+              </p>
+            </div>
+
+            <!-- Quiz Card Actions -->
+            <div class="quiz-card-actions">
+              <div class="quiz-tip" id="quizActionTip">Select an option to continue</div>
+              <button type="button" class="btn btn-primary" id="btnSubmitAnswer" disabled>
+                <span>Check Answer</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+              <button type="button" class="btn btn-primary" id="btnNextQuestion" style="display: none;">
+                <span id="btnNextText">Next Question</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 3: RESULTS SCREEN                     -->
+      <!-- ========================================== -->
+      <section class="view" id="viewResults" aria-label="Quiz Results">
+        <div class="results-container">
+          <!-- Score Summary Card -->
+          <div class="results-summary-card">
+            <span class="results-eyebrow">Quiz Complete</span>
+            <h1 class="results-title" id="resultsQuizTitle">Web Development Basics</h1>
+            
+            <!-- Circular Score Meter -->
+            <div class="circular-score-wrapper">
+              <svg class="score-ring" viewBox="0 0 160 160" width="160" height="160" aria-hidden="true">
+                <circle class="score-ring-bg" cx="80" cy="80" r="70"></circle>
+                <circle class="score-ring-progress" id="scoreRingProgress" cx="80" cy="80" r="70" stroke-dasharray="440" stroke-dashoffset="88"></circle>
+              </svg>
+              <div class="score-ring-content">
+                <span class="score-percentage" id="scorePercentage">80%</span>
+                <span class="score-ratio" id="scoreRatio">4 of 5 correct</span>
+              </div>
+            </div>
+
+            <!-- Performance Message -->
+            <div class="performance-message" id="performanceMessage">
+              <h3 class="performance-title" id="performanceTitle">Outstanding Performance!</h3>
+              <p class="performance-desc" id="performanceDesc">You've demonstrated a deep understanding of these concepts.</p>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="results-metrics">
+              <div class="metric-item metric-correct">
+                <div class="metric-dot"></div>
+                <span class="metric-label">Correct</span>
+                <span class="metric-value" id="resultsCorrectCount">4</span>
+              </div>
+              <div class="metric-item metric-incorrect">
+                <div class="metric-dot"></div>
+                <span class="metric-label">Incorrect</span>
+                <span class="metric-value" id="resultsIncorrectCount">1</span>
+              </div>
+              <div class="metric-item metric-accuracy">
+                <div class="metric-dot"></div>
+                <span class="metric-label">Accuracy</span>
+                <span class="metric-value" id="resultsAccuracy">80%</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="results-actions">
+              <button type="button" class="btn btn-primary" id="btnTryAgain">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M23 4v6h-6"></path>
+                  <path d="M1 20v-6h6"></path>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                <span>Try Again</span>
+              </button>
+              <button type="button" class="btn btn-secondary" id="btnResultsOverview">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Back to Overview</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Comprehensive Question Review Section -->
+          <div class="results-review-section">
+            <div class="review-header">
+              <h2 class="review-title">Detailed Answers Review</h2>
+              <p class="review-subtitle">Review each question with correct answers and explanations.</p>
+            </div>
+
+            <div class="review-list" id="reviewList">
+              <!-- Dynamically populated question reviews -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 4: CUSTOM QUIZ CREATOR                -->
+      <!-- ========================================== -->
+      <section class="view" id="viewCreate" aria-label="Create Custom Quiz">
+        <div class="creator-container">
+          <div class="creator-header">
+            <div>
+              <span class="creator-badge">Quiz Builder</span>
+              <h1 class="creator-title">Create a Custom Quiz</h1>
+              <p class="creator-subtitle">Author custom multiple-choice quizzes (1 to 10 questions) and challenge yourself or friends.</p>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btnCancelCreate">
+              Cancel
+            </button>
+          </div>
+
+          <form id="quizCreatorForm" class="creator-form" novalidate>
+            <!-- General Quiz Info Card -->
+            <div class="form-card">
+              <h3 class="form-card-title">Quiz Details</h3>
+              <div class="form-grid">
+                <div class="form-group form-group-full">
+                  <label for="createQuizTitle" class="form-label">Quiz Title <span class="required">*</span></label>
+                  <input type="text" id="createQuizTitle" class="form-control" placeholder="e.g. Modern CSS Mastery" maxlength="60" required>
+                  <span class="form-helper">Give your quiz a descriptive, engaging title.</span>
+                </div>
+
+                <div class="form-group">
+                  <label for="createQuizCategory" class="form-label">Category <span class="required">*</span></label>
+                  <select id="createQuizCategory" class="form-control" required>
+                    <option value="" disabled selected>Select category...</option>
+                    <option value="Web Development">Web Development</option>
+                    <option value="General Knowledge">General Knowledge</option>
+                    <option value="Science">Science</option>
+                    <option value="History">History</option>
+                    <option value="Technology">Technology</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="createQuizDifficulty" class="form-label">Difficulty <span class="required">*</span></label>
+                  <select id="createQuizDifficulty" class="form-control" required>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
+
+                <div class="form-group form-group-full">
+                  <label for="createQuizDescription" class="form-label">Short Description <span class="required">*</span></label>
+                  <textarea id="createQuizDescription" class="form-control" rows="2" placeholder="Briefly describe what this quiz covers..." maxlength="180" required></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dynamic Questions Container -->
+            <div class="creator-questions-section">
+              <div class="questions-section-header">
+                <div>
+                  <h3 class="form-card-title">Questions (<span id="questionCountDisplay">1</span>/10)</h3>
+                  <p class="form-card-subtitle">Each question requires 4 options and one designated correct answer.</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" id="btnAddQuestion">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  <span>Add Question</span>
+                </button>
+              </div>
+
+              <!-- Container where question editor cards are rendered -->
+              <div class="questions-editor-list" id="questionsEditorList">
+                <!-- Dynamically rendered question builder cards -->
+              </div>
+            </div>
+
+            <!-- Creator Form Actions -->
+            <div class="creator-form-actions">
+              <button type="button" class="btn btn-secondary" id="btnResetForm">Reset Form</button>
+              <button type="submit" class="btn btn-primary" id="btnSaveQuiz">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span>Publish Quiz</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- VIEW 5: RESULTS HISTORY (MY RESULTS)       -->
+      <!-- ========================================== -->
+      <section class="view" id="viewHistory" aria-label="Quiz Results History">
+        <div class="history-container">
+          <div class="history-header">
+            <div>
+              <span class="history-badge">Track Record</span>
+              <h1 class="history-title">My Results</h1>
+              <p class="history-subtitle">Review your past attempts and measure your learning journey over time.</p>
+            </div>
+            <button type="button" class="btn btn-outline-danger btn-sm" id="btnClearHistory" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+              <span>Clear History</span>
+            </button>
+          </div>
+
+          <!-- History Table / List -->
+          <div class="history-card">
+            <div class="history-table-wrapper" id="historyTableWrapper">
+              <table class="history-table" id="historyTable">
+                <thead>
+                  <tr>
+                    <th>Quiz Title</th>
+                    <th>Category</th>
+                    <th>Completed Date</th>
+                    <th>Score</th>
+                    <th>Accuracy</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                  <!-- Dynamically populated history rows -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Empty History State -->
+            <div class="history-empty-state" id="historyEmptyState">
+              <div class="empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <h3 class="empty-title">No Quiz Attempts Recorded</h3>
+              <p class="empty-desc">You haven't completed any quizzes yet. Pick a quiz from the overview to get your first score on the board!</p>
+              <button type="button" class="btn btn-primary" id="btnHistoryExplore">
+                <span>Explore Quizzes</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODALS & DIALOGS                           -->
+  <!-- ========================================== -->
+
+  <!-- 1. Exit Quiz Confirmation Modal -->
+  <div class="modal-backdrop" id="modalExitQuiz" role="dialog" aria-modal="true" aria-labelledby="modalExitTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-icon modal-icon-warning">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h3 class="modal-title" id="modalExitTitle">Exit Current Quiz?</h3>
+      </div>
+      <div class="modal-body">
+        <p>Your current quiz progress will be lost if you leave now. Are you sure you want to return to the dashboard?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnModalStay">Keep Playing</button>
+        <button type="button" class="btn btn-danger" id="btnModalConfirmExit">Exit Quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Clear History Confirmation Modal -->
+  <div class="modal-backdrop" id="modalClearHistory" role="dialog" aria-modal="true" aria-labelledby="modalClearTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-icon modal-icon-danger">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </div>
+        <h3 class="modal-title" id="modalClearTitle">Clear All History?</h3>
+      </div>
+      <div class="modal-body">
+        <p>This will permanently erase all completed quiz attempts and reset your dashboard statistics. This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnModalCancelClear">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btnModalConfirmClear">Yes, Clear History</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Delete Custom Quiz Confirmation Modal -->
+  <div class="modal-backdrop" id="modalDeleteQuiz" role="dialog" aria-modal="true" aria-labelledby="modalDeleteQuizTitle" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-icon modal-icon-danger">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </div>
+        <h3 class="modal-title" id="modalDeleteQuizTitle">Delete Custom Quiz?</h3>
+      </div>
+      <div class="modal-body">
+        <p id="modalDeleteQuizPrompt">Are you sure you want to permanently delete this custom quiz?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="btnModalCancelDeleteQuiz">Cancel</button>
+        <button type="button" class="btn btn-danger" id="btnModalConfirmDeleteQuiz">Delete Quiz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
