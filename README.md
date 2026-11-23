@@ -19,12 +19,11 @@ Built strictly using vanilla **HTML5**, **CSS3**, and **JavaScript (ES6+)**, Qui
 ### 2. Interactive Quiz Engine
 - **Single Question Focus**: Displays one question at a time with clean, accessible option cards (A, B, C, D).
 - **Progress Tracking**: Real-time progress bar and counter (`Question X of Y`).
-- **Instant Educational Feedback**:
-  - Highlights user selection with distinct active states.
-  - On submission, options lock to prevent duplicate answers.
-  - Highlights correct answers in soft emerald green (`#10B981`) and incorrect choices in soft rose red (`#EF4444`).
-  - An animated explanation card reveals the deeper reasoning behind each question.
-- **Accurate State Storage**: Preserves answer records in runtime state before advancing.
+- **Unbiased Assessment Flow**:
+  - Selecting an option highlights your choice with a clean active state without prematurely revealing answers during the test.
+  - Users can change their selection before moving to the next question.
+  - The "Next Question" button advances through questions and changes to "Finish Quiz" on the final question.
+- **Accurate State Storage**: Preserves all answer choices in runtime state before finalizing results.
 - **Exit Protection**: Confirmation modal prevents accidental loss of in-progress quiz attempts.
 
 ### 3. Rich Results & Review Suite

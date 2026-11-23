@@ -1014,6 +1014,13 @@ a {
   transition: all var(--transition-fast);
 }
 
+.option-btn.selected .option-indicator {
+  opacity: 1;
+  transform: scale(1);
+  background-color: var(--primary);
+  color: #FFFFFF;
+}
+
 /* Evaluated Option States */
 .option-btn.correct {
   border-color: var(--success) !important;

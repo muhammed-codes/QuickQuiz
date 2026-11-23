@@ -241,29 +241,10 @@
               <!-- Dynamically populated options -->
             </div>
 
-            <!-- Instant Feedback / Explanation Box (Hidden until answer checked) -->
-            <div class="feedback-box" id="feedbackBox" style="display: none;" aria-live="assertive">
-              <div class="feedback-header">
-                <div class="feedback-badge" id="feedbackBadge">
-                  <span class="feedback-icon" id="feedbackIcon"></span>
-                  <span class="feedback-text" id="feedbackText">Correct!</span>
-                </div>
-              </div>
-              <p class="feedback-explanation" id="feedbackExplanation">
-                Explanation text goes here...
-              </p>
-            </div>
-
             <!-- Quiz Card Actions -->
             <div class="quiz-card-actions">
               <div class="quiz-tip" id="quizActionTip">Select an option to continue</div>
-              <button type="button" class="btn btn-primary" id="btnSubmitAnswer" disabled>
-                <span>Check Answer</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-              </button>
-              <button type="button" class="btn btn-primary" id="btnNextQuestion" style="display: none;">
+              <button type="button" class="btn btn-primary" id="btnNextQuestion" disabled>
                 <span id="btnNextText">Next Question</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="9 18 15 12 9 6"></polyline>

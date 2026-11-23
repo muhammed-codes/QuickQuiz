@@ -318,12 +318,7 @@ const DOM = {
   questionDifficultyPill: document.getElementById('questionDifficultyPill'),
   questionPrompt: document.getElementById('questionPrompt'),
   optionsContainer: document.getElementById('optionsContainer'),
-  feedbackBox: document.getElementById('feedbackBox'),
-  feedbackIcon: document.getElementById('feedbackIcon'),
-  feedbackText: document.getElementById('feedbackText'),
-  feedbackExplanation: document.getElementById('feedbackExplanation'),
   quizActionTip: document.getElementById('quizActionTip'),
-  btnSubmitAnswer: document.getElementById('btnSubmitAnswer'),
   btnNextQuestion: document.getElementById('btnNextQuestion'),
   btnNextText: document.getElementById('btnNextText'),
 
@@ -648,8 +643,7 @@ function startQuiz(quizId) {
     questions: questionsClone,
     currentIndex: 0,
     userAnswers: [],
-    selectedOptionIndex: null,
-    isAnswerChecked: false
+    selectedOptionIndex: null
   };
 
   switchView('quiz', true);
@@ -664,9 +658,8 @@ function renderCurrentQuestion() {
   const totalQuestions = quiz.questions.length;
   const currentNum = quiz.currentIndex + 1;
 
-  // Reset answer states for this question
+  // Reset answer selection for this question
   quiz.selectedOptionIndex = null;
-  quiz.isAnswerChecked = false;
 
   // Update top bar info
   DOM.quizActiveTitle.textContent = quiz.title;
@@ -685,16 +678,12 @@ function renderCurrentQuestion() {
   // Question prompt
   DOM.questionPrompt.textContent = currentQ.prompt;
 
-  // Hide feedback box & actions reset
-  DOM.feedbackBox.style.display = 'none';
-  DOM.feedbackBox.className = 'feedback-box';
-  DOM.btnSubmitAnswer.style.display = 'inline-flex';
-  DOM.btnSubmitAnswer.disabled = true;
-  DOM.btnNextQuestion.style.display = 'none';
+  // Reset action button
+  DOM.btnNextQuestion.disabled = true;
   DOM.quizActionTip.textContent = 'Select an option to continue';
 
   if (currentNum === totalQuestions) {
-    DOM.btnNextText.textContent = 'View Final Results';
+    DOM.btnNextText.textContent = 'Finish Quiz';
   } else {
     DOM.btnNextText.textContent = 'Next Question';
   }
@@ -724,35 +713,49 @@ function renderCurrentQuestion() {
 
 function handleOptionSelect(optionIndex) {
   const quiz = AppState.activeQuiz;
-  if (!quiz || quiz.isAnswerChecked) return;
+  if (!quiz) return;
 
   quiz.selectedOptionIndex = optionIndex;
+  const currentNum = quiz.currentIndex + 1;
+  const totalQuestions = quiz.questions.length;
 
-  // Update visual selection
+  // Update visual selection without revealing correctness
   const allOptionBtns = DOM.optionsContainer.querySelectorAll('.option-btn');
   allOptionBtns.forEach(btn => {
     const idx = parseInt(btn.dataset.optionIndex, 10);
     const isSelected = idx === optionIndex;
     btn.classList.toggle('selected', isSelected);
     btn.setAttribute('aria-checked', isSelected ? 'true' : 'false');
+
+    const indicator = btn.querySelector('.option-indicator');
+    if (indicator) {
+      if (isSelected) {
+        indicator.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+      } else {
+        indicator.innerHTML = '';
+      }
+    }
   });
 
-  // Enable submit button
-  DOM.btnSubmitAnswer.disabled = false;
-  DOM.quizActionTip.textContent = 'Click "Check Answer" to evaluate';
+  // Enable Next Question or Finish button
+  DOM.btnNextQuestion.disabled = false;
+  if (currentNum === totalQuestions) {
+    DOM.quizActionTip.textContent = 'Option selected. Click "Finish Quiz" to submit.';
+  } else {
+    DOM.quizActionTip.textContent = 'Option selected. Click "Next Question" to proceed.';
+  }
 }
 
-function checkCurrentAnswer() {
+function handleNextQuestion() {
   const quiz = AppState.activeQuiz;
-  if (!quiz || quiz.isAnswerChecked || quiz.selectedOptionIndex === null) return;
+  if (!quiz || quiz.selectedOptionIndex === null) return;
 
-  quiz.isAnswerChecked = true;
   const currentQ = quiz.questions[quiz.currentIndex];
   const userChoice = quiz.selectedOptionIndex;
   const correctChoice = currentQ.correctAnswer;
   const isCorrect = userChoice === correctChoice;
 
-  // Save answer to state
+  // Record user answer in state (answers are evaluated and revealed on Results screen)
   quiz.userAnswers.push({
     questionIndex: quiz.currentIndex,
     questionPrompt: currentQ.prompt,
@@ -762,52 +765,6 @@ function checkCurrentAnswer() {
     isCorrect: isCorrect,
     explanation: currentQ.explanation || 'No explanation provided.'
   });
-
-  // Highlight options & disable them
-  const allOptionBtns = DOM.optionsContainer.querySelectorAll('.option-btn');
-  allOptionBtns.forEach(btn => {
-    btn.disabled = true;
-    const idx = parseInt(btn.dataset.optionIndex, 10);
-    const indicator = btn.querySelector('.option-indicator');
-
-    if (idx === correctChoice) {
-      btn.classList.add('correct');
-      if (indicator) {
-        indicator.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-      }
-    } else if (idx === userChoice && !isCorrect) {
-      btn.classList.add('incorrect');
-      if (indicator) {
-        indicator.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-      }
-    } else {
-      btn.classList.add('dimmed');
-    }
-  });
-
-  // Populate Feedback Box
-  DOM.feedbackBox.style.display = 'block';
-  if (isCorrect) {
-    DOM.feedbackBox.className = 'feedback-box feedback-correct';
-    DOM.feedbackIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-    DOM.feedbackText.textContent = 'Correct Answer!';
-  } else {
-    DOM.feedbackBox.className = 'feedback-box feedback-incorrect';
-    DOM.feedbackIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`;
-    DOM.feedbackText.textContent = 'Incorrect';
-  }
-  DOM.feedbackExplanation.textContent = currentQ.explanation;
-
-  // Toggle Action Buttons
-  DOM.btnSubmitAnswer.style.display = 'none';
-  DOM.btnNextQuestion.style.display = 'inline-flex';
-  DOM.btnNextQuestion.focus();
-  DOM.quizActionTip.textContent = 'Answer evaluated';
-}
-
-function handleNextQuestion() {
-  const quiz = AppState.activeQuiz;
-  if (!quiz) return;
 
   if (quiz.currentIndex + 1 < quiz.questions.length) {
     quiz.currentIndex += 1;
@@ -1373,7 +1330,6 @@ function setupEventListeners() {
     AppState.pendingViewChange = 'overview';
     openModal(DOM.modalExitQuiz);
   });
-  DOM.btnSubmitAnswer.addEventListener('click', checkCurrentAnswer);
   DOM.btnNextQuestion.addEventListener('click', handleNextQuestion);
 
   // Exit Quiz Modal Controls
