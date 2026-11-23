@@ -319,6 +319,7 @@ const DOM = {
   questionPrompt: document.getElementById('questionPrompt'),
   optionsContainer: document.getElementById('optionsContainer'),
   quizActionTip: document.getElementById('quizActionTip'),
+  btnPrevQuestion: document.getElementById('btnPrevQuestion'),
   btnNextQuestion: document.getElementById('btnNextQuestion'),
   btnNextText: document.getElementById('btnNextText'),
 
@@ -642,7 +643,7 @@ function startQuiz(quizId) {
     difficulty: targetQuiz.difficulty,
     questions: questionsClone,
     currentIndex: 0,
-    userAnswers: [],
+    userAnswers: new Array(questionsClone.length).fill(null),
     selectedOptionIndex: null
   };
 
@@ -658,8 +659,9 @@ function renderCurrentQuestion() {
   const totalQuestions = quiz.questions.length;
   const currentNum = quiz.currentIndex + 1;
 
-  // Reset answer selection for this question
-  quiz.selectedOptionIndex = null;
+  // Retrieve existing answer if user navigated back to this question
+  const existingAnswer = quiz.userAnswers[quiz.currentIndex];
+  quiz.selectedOptionIndex = existingAnswer ? existingAnswer.selectedOption : null;
 
   // Update top bar info
   DOM.quizActiveTitle.textContent = quiz.title;
@@ -678,9 +680,21 @@ function renderCurrentQuestion() {
   // Question prompt
   DOM.questionPrompt.textContent = currentQ.prompt;
 
-  // Reset action button
-  DOM.btnNextQuestion.disabled = true;
-  DOM.quizActionTip.textContent = 'Select an option to continue';
+  // Previous button state (disabled on the very first question)
+  if (DOM.btnPrevQuestion) {
+    DOM.btnPrevQuestion.disabled = (quiz.currentIndex === 0);
+  }
+
+  // Next / Finish button state
+  if (quiz.selectedOptionIndex !== null) {
+    DOM.btnNextQuestion.disabled = false;
+    DOM.quizActionTip.textContent = (currentNum === totalQuestions)
+      ? 'Option selected. Click "Finish Quiz" to submit.'
+      : 'Option selected. Click "Next Question" to proceed.';
+  } else {
+    DOM.btnNextQuestion.disabled = true;
+    DOM.quizActionTip.textContent = 'Select an option to continue';
+  }
 
   if (currentNum === totalQuestions) {
     DOM.btnNextText.textContent = 'Finish Quiz';
@@ -697,13 +711,24 @@ function renderCurrentQuestion() {
     btn.type = 'button';
     btn.className = 'option-btn';
     btn.setAttribute('role', 'radio');
-    btn.setAttribute('aria-checked', 'false');
     btn.dataset.optionIndex = idx;
+
+    const isSelected = (quiz.selectedOptionIndex === idx);
+    if (isSelected) {
+      btn.classList.add('selected');
+      btn.setAttribute('aria-checked', 'true');
+    } else {
+      btn.setAttribute('aria-checked', 'false');
+    }
+
+    const indicatorSvg = isSelected
+      ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+      : '';
 
     btn.innerHTML = `
       <span class="option-letter">${optionLetters[idx]}</span>
       <span class="option-text">${escapeHtml(optText)}</span>
-      <span class="option-indicator" aria-hidden="true"></span>
+      <span class="option-indicator" aria-hidden="true">${indicatorSvg}</span>
     `;
 
     btn.addEventListener('click', () => handleOptionSelect(idx));
@@ -718,6 +743,18 @@ function handleOptionSelect(optionIndex) {
   quiz.selectedOptionIndex = optionIndex;
   const currentNum = quiz.currentIndex + 1;
   const totalQuestions = quiz.questions.length;
+  const currentQ = quiz.questions[quiz.currentIndex];
+
+  // Store user's selected choice in state
+  quiz.userAnswers[quiz.currentIndex] = {
+    questionIndex: quiz.currentIndex,
+    questionPrompt: currentQ.prompt,
+    options: currentQ.options,
+    selectedOption: optionIndex,
+    correctOption: currentQ.correctAnswer,
+    isCorrect: optionIndex === currentQ.correctAnswer,
+    explanation: currentQ.explanation || 'No explanation provided.'
+  };
 
   // Update visual selection without revealing correctness
   const allOptionBtns = DOM.optionsContainer.querySelectorAll('.option-btn');
@@ -729,11 +766,9 @@ function handleOptionSelect(optionIndex) {
 
     const indicator = btn.querySelector('.option-indicator');
     if (indicator) {
-      if (isSelected) {
-        indicator.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-      } else {
-        indicator.innerHTML = '';
-      }
+      indicator.innerHTML = isSelected
+        ? `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+        : '';
     }
   });
 
@@ -746,25 +781,17 @@ function handleOptionSelect(optionIndex) {
   }
 }
 
+function handlePrevQuestion() {
+  const quiz = AppState.activeQuiz;
+  if (!quiz || quiz.currentIndex <= 0) return;
+
+  quiz.currentIndex -= 1;
+  renderCurrentQuestion();
+}
+
 function handleNextQuestion() {
   const quiz = AppState.activeQuiz;
   if (!quiz || quiz.selectedOptionIndex === null) return;
-
-  const currentQ = quiz.questions[quiz.currentIndex];
-  const userChoice = quiz.selectedOptionIndex;
-  const correctChoice = currentQ.correctAnswer;
-  const isCorrect = userChoice === correctChoice;
-
-  // Record user answer in state (answers are evaluated and revealed on Results screen)
-  quiz.userAnswers.push({
-    questionIndex: quiz.currentIndex,
-    questionPrompt: currentQ.prompt,
-    options: currentQ.options,
-    selectedOption: userChoice,
-    correctOption: correctChoice,
-    isCorrect: isCorrect,
-    explanation: currentQ.explanation || 'No explanation provided.'
-  });
 
   if (quiz.currentIndex + 1 < quiz.questions.length) {
     quiz.currentIndex += 1;
@@ -779,7 +806,8 @@ function finishQuiz() {
   if (!quiz) return;
 
   const totalQuestions = quiz.questions.length;
-  const correctCount = quiz.userAnswers.filter(a => a.isCorrect).length;
+  const validAnswers = quiz.userAnswers.filter(a => a !== null);
+  const correctCount = validAnswers.filter(a => a.isCorrect).length;
   const percentage = Math.round((correctCount / totalQuestions) * 100);
 
   // Create attempt record
@@ -793,7 +821,7 @@ function finishQuiz() {
     correctCount: correctCount,
     percentage: percentage,
     completedAt: new Date().toISOString(),
-    userAnswers: quiz.userAnswers
+    userAnswers: validAnswers
   };
 
   // Prepend to attempts array (most recent first)
@@ -1330,6 +1358,9 @@ function setupEventListeners() {
     AppState.pendingViewChange = 'overview';
     openModal(DOM.modalExitQuiz);
   });
+  if (DOM.btnPrevQuestion) {
+    DOM.btnPrevQuestion.addEventListener('click', handlePrevQuestion);
+  }
   DOM.btnNextQuestion.addEventListener('click', handleNextQuestion);
 
   // Exit Quiz Modal Controls
