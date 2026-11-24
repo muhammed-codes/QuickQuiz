@@ -9,9 +9,9 @@
   'use strict';
 
   // Automatically resolve the backend API base URL
-  // If running via Live Server (port 5500), points to Express backend (port 5000)
-  const isLiveServer = window.location.port === '5500';
-  const API_BASE_URL = isLiveServer ? 'http://localhost:5000' : '';
+  // If running via Live Server (e.g. port 5500), file://, or non-5000 port, route to Express backend at http://localhost:5000
+  const isDirectBackend = window.location.protocol !== 'file:' && (window.location.port === '5000' || (!window.location.port && (window.location.protocol === 'http:' || window.location.protocol === 'https:')));
+  const API_BASE_URL = isDirectBackend ? '' : 'http://localhost:5000';
 
   /**
    * Helper function for unified fetch requests

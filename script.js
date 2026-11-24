@@ -250,7 +250,9 @@ const AppState = {
   currentView: 'overview', // 'overview' | 'quiz' | 'results' | 'create' | 'history'
   activeFilter: 'all',
 
-  // Quizzes and History
+  // Cloud & Local State
+  isCloudMode: false,
+  cloudQuizzes: [],
   customQuizzes: safeStorageGet(STORAGE_KEYS.CUSTOM_QUIZZES, []),
   attempts: safeStorageGet(STORAGE_KEYS.ATTEMPTS, []),
 
@@ -263,9 +265,8 @@ const AppState = {
        difficulty: string,
        questions: Array,
        currentIndex: number,
-       userAnswers: Array<{ questionIndex, selectedOption, correctOption, isCorrect, explanation }>,
-       selectedOptionIndex: number | null,
-       isAnswerChecked: boolean
+       userAnswers: Array,
+       selectedOptionIndex: number | null
      }
   */
 
@@ -488,6 +489,9 @@ function closeModal(modalEl) {
    7. DASHBOARD LOGIC & STATISTICS
    ---------------------------------------------------------------------------- */
 function getAllQuizzes() {
+  if (AppState.isCloudMode && Array.isArray(AppState.cloudQuizzes) && AppState.cloudQuizzes.length > 0) {
+    return AppState.cloudQuizzes;
+  }
   return [...DEFAULT_QUIZZES, ...AppState.customQuizzes];
 }
 
@@ -517,7 +521,10 @@ function renderQuizGrid() {
   // Filter quizzes based on active category
   let filteredQuizzes = allQuizzes;
   if (activeCategory === 'custom') {
-    filteredQuizzes = allQuizzes.filter(q => !q.isDefault);
+    filteredQuizzes = allQuizzes.filter(q => {
+      const isDef = q.isDefault !== undefined ? q.isDefault : (q.is_default !== undefined ? q.is_default : false);
+      return !isDef;
+    });
   } else if (activeCategory !== 'all') {
     filteredQuizzes = allQuizzes.filter(q => q.category === activeCategory);
   }
@@ -556,21 +563,26 @@ function renderQuizGrid() {
     card.setAttribute('aria-label', quiz.title);
 
     // Difficulty style badge
-    const diffClass = `badge-${quiz.difficulty.toLowerCase()}`;
+    const diff = quiz.difficulty || 'Medium';
+    const diffClass = `badge-${diff.toLowerCase()}`;
 
     // Custom badge
-    const customBadge = !quiz.isDefault 
+    const isDefault = quiz.isDefault !== undefined ? quiz.isDefault : (quiz.is_default !== undefined ? quiz.is_default : false);
+    const customBadge = !isDefault 
       ? `<span class="badge badge-custom">Custom</span>` 
       : '';
+
+    // Question count handles questions array or question_count number
+    const count = (quiz.questions && quiz.questions.length) || quiz.question_count || quiz.questionsCount || 0;
 
     card.innerHTML = `
       <div class="quiz-card-top">
         <div class="quiz-card-tags">
           <span class="badge badge-category">${escapeHtml(quiz.category)}</span>
-          <span class="badge ${diffClass}">${escapeHtml(quiz.difficulty)}</span>
+          <span class="badge ${diffClass}">${escapeHtml(diff)}</span>
           ${customBadge}
         </div>
-        ${!quiz.isDefault ? `
+        ${!isDefault ? `
           <button type="button" class="btn-icon btn-delete-quiz" data-quiz-id="${quiz.id}" aria-label="Delete custom quiz" title="Delete Quiz">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="3 6 5 6 21 6"></polyline>
@@ -589,7 +601,7 @@ function renderQuizGrid() {
             <circle cx="12" cy="12" r="10"></circle>
             <polyline points="12 6 12 12 16 14"></polyline>
           </svg>
-          <span>${quiz.questions.length} Questions</span>
+          <span>${count} Questions</span>
         </div>
         <button type="button" class="btn btn-primary btn-sm btn-start-quiz" data-quiz-id="${quiz.id}">
           <span>Start Quiz</span>
@@ -624,9 +636,22 @@ function renderQuizGrid() {
 /* ----------------------------------------------------------------------------
    8. ACTIVE QUIZ EXECUTION & EVALUATION
    ---------------------------------------------------------------------------- */
-function startQuiz(quizId) {
-  const allQuizzes = getAllQuizzes();
-  const targetQuiz = allQuizzes.find(q => q.id === quizId);
+async function startQuiz(quizId) {
+  let targetQuiz = null;
+
+  // In Cloud Mode, fetch quiz questions from Neon
+  if (AppState.isCloudMode && window.QuickQuizAPI) {
+    try {
+      targetQuiz = await window.QuickQuizAPI.getQuizById(quizId);
+    } catch (err) {
+      console.warn('[QuickQuiz] Could not fetch quiz from cloud, falling back to local list:', err);
+    }
+  }
+
+  if (!targetQuiz) {
+    const allQuizzes = getAllQuizzes();
+    targetQuiz = allQuizzes.find(q => q.id === quizId);
+  }
 
   if (!targetQuiz || !targetQuiz.questions || targetQuiz.questions.length === 0) {
     showToast('Unable to start quiz. No questions found.', 'error');
@@ -801,28 +826,49 @@ function handleNextQuestion() {
   }
 }
 
-function finishQuiz() {
+async function finishQuiz() {
   const quiz = AppState.activeQuiz;
   if (!quiz) return;
 
   const totalQuestions = quiz.questions.length;
   const validAnswers = quiz.userAnswers.filter(a => a !== null);
-  const correctCount = validAnswers.filter(a => a.isCorrect).length;
-  const percentage = Math.round((correctCount / totalQuestions) * 100);
 
-  // Create attempt record
-  const attempt = {
-    id: `attempt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-    quizId: quiz.quizId,
-    quizTitle: quiz.title,
-    category: quiz.category,
-    difficulty: quiz.difficulty,
-    totalQuestions: totalQuestions,
-    correctCount: correctCount,
-    percentage: percentage,
-    completedAt: new Date().toISOString(),
-    userAnswers: validAnswers
-  };
+  let attempt = null;
+
+  // Cloud Mode: Submit to Neon backend for server-side evaluation & saving
+  if (AppState.isCloudMode && window.QuickQuizAPI) {
+    try {
+      const payloadAnswers = quiz.questions.map((q, idx) => ({
+        questionId: q.id,
+        questionIndex: idx,
+        selectedOption: quiz.userAnswers[idx] ? quiz.userAnswers[idx].selectedOption : -1,
+        selectedAnswer: quiz.userAnswers[idx] ? quiz.userAnswers[idx].selectedOption : -1
+      }));
+
+      attempt = await window.QuickQuizAPI.submitAttempt(quiz.quizId, payloadAnswers);
+    } catch (err) {
+      console.warn('[QuickQuiz] Cloud attempt submission failed, using local fallback:', err);
+    }
+  }
+
+  // Local fallback if cloud request failed or in offline mode
+  if (!attempt) {
+    const correctCount = validAnswers.filter(a => a.isCorrect).length;
+    const percentage = Math.round((correctCount / totalQuestions) * 100);
+
+    attempt = {
+      id: `attempt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      quizId: quiz.quizId,
+      quizTitle: quiz.title,
+      category: quiz.category,
+      difficulty: quiz.difficulty,
+      totalQuestions: totalQuestions,
+      correctCount: correctCount,
+      percentage: percentage,
+      completedAt: new Date().toISOString(),
+      userAnswers: validAnswers
+    };
+  }
 
   // Prepend to attempts array (most recent first)
   AppState.attempts.unshift(attempt);
@@ -1088,7 +1134,7 @@ function handleAddQuestion() {
   }
 }
 
-function handleSaveCustomQuiz(e) {
+async function handleSaveCustomQuiz(e) {
   e.preventDefault();
 
   const title = DOM.createQuizTitle.value.trim();
@@ -1161,12 +1207,10 @@ function handleSaveCustomQuiz(e) {
 
   // Build Quiz Object
   const newQuiz = {
-    id: `quiz_custom_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
     title: title,
     category: category,
     difficulty: difficulty,
     description: description,
-    isDefault: false,
     questions: AppState.builderQuestions.map(q => ({
       prompt: q.prompt.trim(),
       options: q.options.map(opt => opt.trim()),
@@ -1175,7 +1219,24 @@ function handleSaveCustomQuiz(e) {
     }))
   };
 
-  // Save to State and localStorage
+  // If connected to Neon Cloud: persist directly to database
+  if (AppState.isCloudMode && window.QuickQuizAPI) {
+    try {
+      await window.QuickQuizAPI.createQuiz(newQuiz);
+      showToast(`Quiz "${newQuiz.title}" saved to Neon Cloud!`, 'success');
+      await refreshCloudData();
+      resetQuizCreatorForm();
+      switchView('overview');
+      return;
+    } catch (err) {
+      console.warn('[QuickQuiz] Cloud save failed, saving locally as fallback:', err);
+      showToast('Cloud save failed; saved locally as fallback.', 'info');
+    }
+  }
+
+  // Local Storage Fallback
+  newQuiz.id = `quiz_custom_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+  newQuiz.isDefault = false;
   AppState.customQuizzes.unshift(newQuiz);
   safeStorageSet(STORAGE_KEYS.CUSTOM_QUIZZES, AppState.customQuizzes);
 
@@ -1196,7 +1257,8 @@ function resetQuizCreatorForm() {
 }
 
 function promptDeleteQuiz(quizId) {
-  const quiz = AppState.customQuizzes.find(q => q.id === quizId);
+  const all = getAllQuizzes();
+  const quiz = all.find(q => q.id === quizId);
   if (!quiz) return;
 
   AppState.quizToDeleteId = quizId;
@@ -1204,10 +1266,26 @@ function promptDeleteQuiz(quizId) {
   openModal(DOM.modalDeleteQuiz);
 }
 
-function confirmDeleteQuiz() {
+async function confirmDeleteQuiz() {
   if (!AppState.quizToDeleteId) return;
 
   const quizId = AppState.quizToDeleteId;
+
+  if (AppState.isCloudMode && window.QuickQuizAPI) {
+    try {
+      await window.QuickQuizAPI.deleteQuiz(quizId);
+      AppState.cloudQuizzes = AppState.cloudQuizzes.filter(q => q.id !== quizId);
+      closeModal(DOM.modalDeleteQuiz);
+      AppState.quizToDeleteId = null;
+      showToast('Custom quiz deleted from Neon cloud.', 'info');
+      renderDashboard();
+      return;
+    } catch (err) {
+      console.warn('[QuickQuiz] Cloud quiz deletion failed, trying local:', err);
+    }
+  }
+
+  // Local fallback
   AppState.customQuizzes = AppState.customQuizzes.filter(q => q.id !== quizId);
   safeStorageSet(STORAGE_KEYS.CUSTOM_QUIZZES, AppState.customQuizzes);
 
@@ -1287,7 +1365,15 @@ function renderHistoryView() {
   });
 }
 
-function clearAllHistory() {
+async function clearAllHistory() {
+  if (AppState.isCloudMode && window.QuickQuizAPI) {
+    try {
+      await window.QuickQuizAPI.clearAttempts();
+    } catch (err) {
+      console.warn('[QuickQuiz] Could not clear cloud attempts:', err);
+    }
+  }
+
   AppState.attempts = [];
   safeStorageSet(STORAGE_KEYS.ATTEMPTS, []);
   closeModal(DOM.modalClearHistory);
@@ -1414,10 +1500,70 @@ function setupEventListeners() {
 }
 
 /* ----------------------------------------------------------------------------
-   14. APPLICATION BOOTSTRAP
+   14. APPLICATION BOOTSTRAP & CLOUD SYNCHRONIZATION
    ---------------------------------------------------------------------------- */
-document.addEventListener('DOMContentLoaded', () => {
+async function initApp() {
   setupEventListeners();
   initQuizCreator();
   renderDashboard();
+
+  // Connect to Neon Cloud Backend via QuickQuizAPI
+  if (typeof window !== 'undefined' && window.QuickQuizAPI) {
+    try {
+      const health = await window.QuickQuizAPI.checkHealth();
+      if (health && health.database && health.database.connected) {
+        AppState.isCloudMode = true;
+        updateCloudStatusBadge(true, 'Neon Cloud');
+        await refreshCloudData();
+      } else {
+        updateCloudStatusBadge(false, 'Local Storage');
+      }
+    } catch (err) {
+      console.log('[QuickQuiz] Operating in local storage mode:', err.message);
+      updateCloudStatusBadge(false, 'Local Storage');
+    }
+  }
+}
+
+async function refreshCloudData() {
+  if (!window.QuickQuizAPI) return;
+  try {
+    const [quizzes, attempts] = await Promise.all([
+      window.QuickQuizAPI.getQuizzes(),
+      window.QuickQuizAPI.getAttempts()
+    ]);
+    if (Array.isArray(quizzes) && quizzes.length > 0) {
+      AppState.cloudQuizzes = quizzes;
+    }
+    if (Array.isArray(attempts)) {
+      AppState.attempts = attempts;
+      safeStorageSet(STORAGE_KEYS.ATTEMPTS, AppState.attempts);
+    }
+    renderDashboard();
+    if (AppState.currentView === 'history') {
+      renderHistoryView();
+    }
+  } catch (err) {
+    console.warn('[QuickQuiz] Could not refresh cloud data:', err);
+  }
+}
+
+function updateCloudStatusBadge(connected, label) {
+  if (typeof document === 'undefined') return;
+  const badge = document.getElementById('cloudStatusBadge');
+  if (badge) {
+    if (connected) {
+      badge.textContent = `● ${label}`;
+      badge.style.color = '#10B981';
+      badge.title = 'Connected to Neon PostgreSQL Cloud Database';
+    } else {
+      badge.textContent = `○ ${label}`;
+      badge.style.color = 'var(--text-muted)';
+      badge.title = 'Operating in offline browser storage mode';
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initApp();
 });

@@ -73,7 +73,8 @@ function validateCreateAttempt(req, res, next) {
 
   for (let i = 0; i < answers.length; i++) {
     const a = answers[i];
-    if (a.selectedAnswer === undefined && a.selected_answer === undefined) {
+    const val = (a.selectedAnswer !== undefined) ? a.selectedAnswer : ((a.selectedOption !== undefined) ? a.selectedOption : a.selected_answer);
+    if (val === undefined || val === null) {
       return next(new AppError(`Answer at index ${i} is missing selected answer index.`, 400));
     }
   }
