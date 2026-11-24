@@ -57,11 +57,12 @@ Built strictly using vanilla **HTML5**, **CSS3**, and **JavaScript (ES6+)**, Qui
 
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
-| **Markup** | HTML5 | Semantic elements (`<header>`, `<nav>`, `<main>`, `<section>`, `<article>`), ARIA attributes |
-| **Styling** | CSS3 | Custom CSS properties (variables), Flexbox, CSS Grid, smooth transitions, zero frameworks |
-| **Scripting** | Vanilla JavaScript | ES6+ syntax, modular function structure, state management, zero dependencies |
-| **Persistence** | Browser `localStorage` | Fault-tolerant JSON serialization with `try/catch` fallbacks |
-| **Typography** | Google Fonts | `DM Sans` (body text) and `Plus Jakarta Sans` (headings and badges) |
+| **Frontend UI** | HTML5 & CSS3 | Semantic markup, DM Sans & Plus Jakarta Sans, CSS custom properties, zero frameworks |
+| **Frontend Scripting** | Vanilla JavaScript | ES6+ native API client (`api.js`), responsive state management (`script.js`) |
+| **Backend Server** | Node.js + Express.js | Lightweight REST API, CORS enabled, input validation & centralized error handling |
+| **Cloud Database** | Neon PostgreSQL | Serverless cloud PostgreSQL with connection pooling (`pg.Pool`) & SSL encryption |
+| **Driver & Config** | `pg` + `dotenv` | Parameterized SQL queries, `.env` configuration |
+| **Local Persistence** | `localStorage` | Client-side fallback layer preserving zero-friction local functionality |
 
 ---
 
@@ -69,11 +70,113 @@ Built strictly using vanilla **HTML5**, **CSS3**, and **JavaScript (ES6+)**, Qui
 
 ```text
 QuickQuiz/
-├── index.html        # Semantic HTML layout and view containers
-├── style.css         # Modern SaaS CSS design system & responsive layout
-├── script.js         # State management, quiz engine, creator, and storage logic
-└── README.md         # Documentation, architecture, and deployment guide
+├── backend/
+│   ├── config/
+│   │   └── db.js            # Neon PostgreSQL connection pool & health diagnostics
+│   ├── controllers/
+│   │   ├── quizzes.js       # Quiz CRUD controllers (list, get, create, update, delete)
+│   │   └── attempts.js      # Server-side answer evaluation & attempt history controllers
+│   ├── db/
+│   │   ├── schema.sql       # PostgreSQL DDL table definitions, indexes & constraints
+│   │   ├── init.js          # Database schema migration runner (`npm run db:init`)
+│   │   └── seed.js          # Default curriculum seeder script (`npm run db:seed`)
+│   ├── middleware/
+│   │   ├── errorHandler.js  # Centralized error handler & operational error class
+│   │   └── validate.js      # Input validation middleware for quizzes & attempts
+│   ├── routes/
+│   │   ├── quizzes.js       # Express router for /api/quizzes
+│   │   └── attempts.js      # Express router for /api/attempts
+│   └── server.js            # Express server entry point & static asset host
+├── api.js                   # Frontend API service layer (fetch calls with backend fallback)
+├── index.html               # Semantic HTML layout and view containers
+├── style.css                # Modern SaaS CSS design system & responsive layout
+├── script.js                # State management, quiz engine, creator, and storage logic
+├── .env.example             # Template for Neon database credentials
+├── .gitignore               # Ignores .env and node_modules
+├── package.json             # Backend dependencies: express, pg, dotenv, cors
+└── README.md                # Documentation, architecture, and deployment guide
 ```
+
+---
+
+## 🐘 Neon PostgreSQL Cloud Database Setup
+
+QuickQuiz uses **Neon** (serverless PostgreSQL) for cloud data persistence.
+
+### 1. Create a Neon Database Project
+1. Visit [https://console.neon.tech](https://console.neon.tech) and sign in or sign up.
+2. Click **"New Project"**.
+3. Name your project (e.g., `quickquiz-db`) and choose your preferred cloud region.
+4. Neon will display your **Connection Details** on the project dashboard.
+
+### 2. Configure Environment Variables
+1. Copy the example configuration template:
+   ```bash
+   cp .env.example .env
+   ```
+2. In `.env`, set `DATABASE_URL` to your Neon pooled connection string:
+   ```env
+   PORT=5000
+   DATABASE_URL=postgresql://<user>:<password>@<neon-hostname>/neondb?sslmode=require
+   ```
+
+### 3. Initialize the Database Schema
+Run the database migration script to automatically create all required tables (`quizzes`, `questions`, `quiz_attempts`, `attempt_answers`) and indexes:
+```bash
+npm run db:init
+```
+
+### 4. Seed the Default Quizzes
+Seed the default 3 curriculum decks into your Neon database:
+```bash
+npm run db:seed
+```
+
+---
+
+## 🚀 Running the Application
+
+### Running with the Node.js / Express Backend (Recommended)
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Start the server:
+   ```bash
+   npm start
+   ```
+3. Open [http://localhost:5000](http://localhost:5000) in your browser. The Express server serves both the REST API and the frontend application.
+
+### Running with Live Server (Frontend Only)
+You can also run the frontend via VS Code Live Server (`http://127.0.0.1:5500`). The frontend API service (`api.js`) automatically detects Live Server and directs API calls to `http://localhost:5000` via CORS.
+
+---
+
+## 🔌 Backend REST API Reference
+
+All responses return consistent JSON envelopes: `{ success: true, data: ... }` or `{ success: false, error: ... }`.
+
+| Method | Endpoint | Description | Security / Behavior |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/health` | Service and database health check | Returns database connection diagnostic info |
+| `GET` | `/api/quizzes` | List all quizzes with question counts | Sorted by default status and creation date |
+| `GET` | `/api/quizzes/:id` | Get single quiz by ID with questions | **Secure**: Omits `correct_answer` unless `?includeAnswers=true` |
+| `POST` | `/api/quizzes` | Create custom quiz with questions | Transactional insert; validates 1–10 questions, 4 options |
+| `PUT` | `/api/quizzes/:id` | Update an existing custom quiz | Protects default quizzes from modification |
+| `DELETE` | `/api/quizzes/:id` | Delete a custom quiz and its questions | Cascades deletion; protects default quizzes |
+| `GET` | `/api/attempts` | Retrieve quiz attempt history | Ordered by newest first; joins attempt answers |
+| `POST` | `/api/attempts` | Submit quiz attempt & evaluate answers | **Server-side validation**: Compares against DB; returns score & review |
+| `DELETE` | `/api/attempts` | Clear all quiz attempt history | Cascades deletion of attempt answers |
+
+---
+
+## 🔒 Security Architecture: Server-Side Answer Validation
+
+In the original localStorage implementation, the client had access to all question answer keys in memory. In the new cloud architecture:
+1. When players retrieve a quiz to take it (`GET /api/quizzes/:id`), the API **omits** `correct_answer` and `explanation`.
+2. When the user finishes the quiz, the frontend posts their chosen answers via `POST /api/attempts`.
+3. The Express backend verifies each selected answer against the database, computes the score and percentage, records the attempt in `quiz_attempts` and `attempt_answers`, and returns the scored review payload.
+4. This ensures integrity and prevents client-side answer inspection.
 
 ---
 

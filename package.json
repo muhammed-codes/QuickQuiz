@@ -1,0 +1,31 @@
+{
+  "name": "quickquiz",
+  "version": "1.0.0",
+  "description": "QuickQuiz is a polished, production-grade educational quiz application designed with a modern SaaS aesthetic. It allows users to challenge their knowledge through curated decks, build custom interactive multiple-choice quizzes, review granular answer explanations, and track learning analytics over time.",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "db:init": "node backend/db/init.js",
+    "db:seed": "node backend/db/seed.js",
+    "test": "node scratch/test_backend.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/muhammed-codes/QuickQuiz.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/muhammed-codes/QuickQuiz/issues"
+  },
+  "homepage": "https://github.com/muhammed-codes/QuickQuiz#readme",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "pg": "^8.23.1"
+  }
+}
